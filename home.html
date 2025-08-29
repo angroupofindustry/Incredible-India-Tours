@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home • Incredible India Tours</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body class="bg">
+  <header class="topbar" role="navigation">
+    <div class="brand">
+      <a href="home.html" class="logo" aria-label="Home">🪷</a>
+      <div>
+        <strong>Incredible India Tours</strong>
+        <div class="muted small">37 Destinations • All States & UTs</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="btn ghost" href="premium.html" aria-label="Premium Tours">Premium Tours</a>
+      <a class="btn ghost" href="admin.html" aria-label="Admin Login">Admin</a>
+      <button class="btn danger" id="btnLogout" aria-label="Logout">Logout</button>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <header class="panel-head row between wrap gap">
+        <h2>Plan your next journey</h2>
+        <div class="row wrap gap">
+          <input id="q" class="w-260" placeholder="Search by destination, city, or state" />
+          <select id="stateFilter" aria-label="Filter by state"></select>
+          <select id="daysFilter" aria-label="Filter by duration">
+            <option value="All" selected>Any Duration</option>
+            <option value="2">2+ days</option>
+            <option value="3">3+ days</option>
+            <option value="4">4+ days</option>
+            <option value="5">5+ days</option>
+          </select>
+          <button id="clearFilters" class="btn ghost" aria-label="Clear filters">Clear</button>
+        </div>
+      </header>
+      <div class="panel-body">
+        <div id="tourGrid" class="grid cards" role="list"></div>
+      </div>
+    </section>
+
+    <section class="panel tiles">
+      <header class="panel-head"><h3>Why travel with us?</h3></header>
+      <div class="panel-body grid cols-3">
+        <div class="tile">
+          <div class="tile-icon">✨</div>
+          <h4>Premium Tours</h4>
+          <p class="muted">Carefully curated experiences with boutique stays and seamless logistics.</p>
+        </div>
+        <div class="tile">
+          <div class="tile-icon">🧭</div>
+          <h4>Expert Guides</h4>
+          <p class="muted">Local knowledge you can trust, storytelling that brings places alive.</p>
+        </div>
+        <div class="tile">
+          <div class="tile-icon">📞</div>
+          <h4>24/7 Support</h4>
+          <p class="muted">Round‑the‑clock assistance via phone, chat, and WhatsApp.</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="support-banner" role="note">
+      <strong>Need help?</strong> Our travel specialists are available 24/7. Call +91‑800‑000‑0000.
+    </aside>
+  </main>
+
+  <!-- Booking Modal -->
+  <div class="modal" id="payModal" aria-hidden="true" aria-label="Payment dialog">
+    <div class="window">
+      <header class="row between center">
+        <strong>Complete Payment</strong>
+        <button class="btn ghost" id="closePay">Close</button>
+      </header>
+      <div id="paySummary" class="muted" style="margin:6px 0 14px"></div>
+      <div class="form-grid">
+        <label>
+          <span>Cardholder Name</span>
+          <input id="cardName" placeholder="e.g. A. Sharma" />
+        </label>
+        <label>
+          <span>Card Number</span>
+          <input id="cardNum" inputmode="numeric" placeholder="1111 2222 3333 4444" />
+        </label>
+        <div class="row gap">
+          <label class="w-50">
+            <span>Expiry</span>
+            <input id="cardExp" placeholder="MM/YY" />
+          </label>
+          <label class="w-50">
+            <span>CVV</span>
+            <input id="cardCvv" placeholder="***" />
+          </label>
+        </div>
+      </div>
+      <p class="muted small">Demo only — clicking <b>Pay Now</b> will mark the booking as <span class="pill">PAID</span>.</p>
+      <div class="row end gap">
+        <button class="btn ghost" id="cancelPay">Cancel</button>
+        <button class="btn" id="confirmPay">Pay Now</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">© <span id="yr"></span> Incredible India Tours • Demo</footer>
+
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

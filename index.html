@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login • Incredible India Tours</title>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body class="bg">
+  <main class="container auth-grid" aria-labelledby="brandTitle">
+    <section class="panel hero" role="region" aria-label="Brand and highlights">
+      <div class="hero-bg"></div>
+      <div class="hero-body">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">🪷</div>
+          <div>
+            <h1 id="brandTitle">Incredible India Tours</h1>
+            <p class="muted">See more. Feel more. India.</p>
+          </div>
+        </div>
+        <ul class="ticks">
+          <li>37 Destinations • All States & Union Territories</li>
+          <li>Premium Tours • Carefully curated experiences</li>
+          <li>Expert Guides • Local knowledge & 24/7 support</li>
+          <li>Lightning‑fast search by city/state</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="panel card" role="form" aria-labelledby="loginTitle">
+      <header class="card-head">
+        <h2 id="loginTitle">User Login</h2>
+        <span class="muted">Demo site — any credentials will work</span>
+      </header>
+      <div class="card-body">
+        <form id="userLoginForm" class="form-grid" autocomplete="on">
+          <label>
+            <span>Full Name</span>
+            <input id="u_name" placeholder="e.g. Ananya Gupta" required />
+          </label>
+          <label>
+            <span>Email</span>
+            <input id="u_email" type="email" placeholder="you@example.com" required />
+          </label>
+          <label>
+            <span>Password</span>
+            <input id="u_pass" type="password" placeholder="••••••••" required />
+          </label>
+          <div class="row end gap">
+            <a class="btn ghost" href="admin.html" aria-label="Admin Login">Admin Login</a>
+            <button class="btn" type="submit">Login</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© <span id="yr"></span> Incredible India Tours • Demo</footer>
+
+  <script src="assets/js/utils.js"></script>
+  <script>
+    byId('yr').textContent = new Date().getFullYear();
+    on('#userLoginForm','submit',(e)=>{
+      e.preventDefault();
+      const user = { name: val('u_name'), email: val('u_email') };
+      storage.patch({ user });
+      go('home.html');
+    });
+  </script>
+</body>
+</html>

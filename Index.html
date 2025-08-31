@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incredible India Tours</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Pacifico for logo, Inter for body text -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- SheetJS (XLSX) for Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* Custom font styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .font-logo {
+            font-family: 'Pacifico', cursive;
+        }
+        /* Hide scrollbar for aesthetics */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Animation for elements on scroll */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .animate-on-scroll.in-view {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        /* Hover effect for cards */
+        .tour-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .tour-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        /* Active thumbnail style */
+        .thumbnail-active {
+            border-color: #f97316; /* orange-500 */
+            opacity: 1;
+        }
+        /* Star rating styles */
+        .star-rating .star {
+            color: #d1d5db; /* gray-300 */
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .star-rating .star:hover,
+        .star-rating .star.selected,
+        .feedback-stars .star-filled {
+            color: #facc15; /* yellow-400 */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Main Application Container -->
+    <div id="app">
+
+        <!-- User Login Page -->
+        <section id="userLoginPage" class="min-h-screen flex items-center justify-center bg-gray-100 p-4 relative">
+            <button onclick="showPage('adminLoginPage')" class="absolute top-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-md hover:bg-gray-900 transition-colors duration-300">
+                Admin Login
+            </button>
+            <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg">
+                <div class="text-center mb-8">
+                    <h1 class="font-logo text-5xl text-orange-500">Incredible India Tours</h1>
+                    <h2 class="text-2xl font-bold text-gray-700 mt-4">Welcome Back</h2>
+                    <p class="text-gray-500 mt-2">Please sign in to explore amazing destinations</p>
+                </div>
+                <form id="userLoginForm" onsubmit="event.preventDefault(); handleUserLogin();">
+                    <div class="mb-4">
+                        <label for="userEmail" class="block text-sm font-medium text-gray-600 mb-1">Email address</label>
+                        <input type="email" id="userEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500" placeholder="Enter your email" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="userPassword" class="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                        <input type="password" id="userPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors duration-300 shadow">
+                        Login
+                    </button>
+                </form>
+                <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                    <p><strong class="font-medium">Demo Credentials:</strong></p>
+                    <p>You can use any email and password to continue.</p>
+                </div>
+                <p class="text-center text-sm text-gray-500 mt-6">
+                    Don't have an account? <a href="#" class="font-medium text-orange-500 hover:underline">Register</a>
+                </p>
+            </div>
+        </section>
+
+        <!-- Admin Login Page -->
+        <section id="adminLoginPage" class="min-h-screen flex items-center justify-center bg-gray-900 p-4 hidden">
+             <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg text-gray-800">
+                <button onclick="showPage('userLoginPage')" class="flex items-center text-sm text-gray-600 hover:text-gray-900 mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    Back to User Login
+                </button>
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold text-gray-800">Admin Portal</h1>
+                    <p class="text-gray-500 mt-2">Access administrative dashboard</p>
+                </div>
+                <form id="adminLoginForm" onsubmit="event.preventDefault(); handleAdminLogin();">
+                    <div class="mb-4">
+                        <label for="adminEmail" class="block text-sm font-medium text-gray-600 mb-1">Admin Email</label>
+                        <input type="email" id="adminEmail" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-800 focus:border-gray-800" placeholder="Enter admin email" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="adminPassword" class="block text-sm font-medium text-gray-600 mb-1">Password</label>
+                        <input type="password" id="adminPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-gray-800 focus:border-gray-800" placeholder="Enter password" required>
+                    </div>
+                    <button type="submit" class="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 transition-colors duration-300 shadow">
+                        Admin Login
+                    </button>
+                </form>
+                <div class="mt-4 p-4 bg-gray-100 border border-gray-200 rounded-lg text-sm text-gray-700">
+                    <p><strong class="font-medium">Demo Credentials:</strong></p>
+                    <p>You can use any email and password to continue.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Home Page -->
+        <section id="homePage" class="hidden">
+            <header class="bg-white shadow-md sticky top-0 z-40">
+                <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+                    <a href="#" class="font-logo text-3xl text-orange-500">Incredible India Tours</a>
+                    <button onclick="handleLogout('userLoginPage')" class="bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 transition-colors">Logout</button>
+                </nav>
+            </header>
+
+            <main>
+                <!-- Hero Section -->
+                <div class="relative h-[60vh] flex items-center justify-center text-white text-center">
+                    <div class="absolute inset-0 bg-black opacity-50"></div>
+                    <img src="https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=2076&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover" alt="Taj Mahal at sunrise">
+                    <div class="relative z-10 p-4">
+                        <h1 class="text-5xl md:text-7xl font-bold leading-tight animate-on-scroll">Welcome to India</h1>
+                        <p class="mt-4 text-lg md:text-xl max-w-3xl mx-auto animate-on-scroll" style="transition-delay: 150ms;">Discover the magic of India's diverse landscapes and rich culture. From majestic palaces to serene backwaters, your unforgettable journey starts here.</p>
+                        <button onclick="document.getElementById('popularDestinationsSection').scrollIntoView({ behavior: 'smooth' })" class="mt-8 bg-orange-500 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-orange-600 transition-transform transform hover:scale-105 duration-300 shadow-lg animate-on-scroll" style="transition-delay: 300ms;">Explore Destinations</button>
+                    </div>
+                </div>
+
+                <!-- Features Section -->
+                <div class="bg-white py-16">
+                    <div class="container mx-auto px-6">
+                         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                            <div class="p-6 border border-gray-200 rounded-xl shadow-sm animate-on-scroll">
+                                <div class="text-orange-500 text-4xl mb-3 mx-auto w-16 h-16 flex items-center justify-center bg-orange-50 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                </div>
+                                <h3 class="text-xl font-bold">100+ Destinations</h3>
+                                <p class="text-gray-500 mt-2">Covering all states and union territories</p>
+                            </div>
+                             <div class="p-6 border border-gray-200 rounded-xl shadow-sm animate-on-scroll" style="transition-delay: 150ms;">
+                                <div class="text-orange-500 text-4xl mb-3 mx-auto w-16 h-16 flex items-center justify-center bg-orange-50 rounded-full">
+                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Premium Tours</h3>
+                                <p class="text-gray-500 mt-2">Carefully curated travel experiences</p>
+                            </div>
+                             <div class="p-6 border border-gray-200 rounded-xl shadow-sm animate-on-scroll" style="transition-delay: 300ms;">
+                                <div class="text-orange-500 text-4xl mb-3 mx-auto w-16 h-16 flex items-center justify-center bg-orange-50 rounded-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                </div>
+                                <h3 class="text-xl font-bold">Expert Guides</h3>
+                                <p class="text-gray-500 mt-2">Local knowledge and 24/7 support</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Popular Destinations -->
+                <div id="popularDestinationsSection" class="py-20 bg-gray-50">
+                    <div class="container mx-auto px-6">
+                        <h2 class="text-4xl font-bold text-center mb-4 animate-on-scroll">Popular Destinations</h2>
+                        <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto animate-on-scroll" style="transition-delay: 150ms;">Discover and book tours in India's most captivating destinations across different states.</p>
+                        <div id="popularDestinations" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            <!-- Destination cards will be injected here by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Featured Tour Packages -->
+                 <div id="featuredPackagesSection" class="py-20 bg-white">
+                    <div class="container mx-auto px-6">
+                        <h2 class="text-4xl font-bold text-center mb-4 animate-on-scroll">Featured Tour Packages</h2>
+                        <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto animate-on-scroll" style="transition-delay: 150ms;">Handpicked tours that showcase the best of India's culture, heritage, and natural beauty.</p>
+                        <div id="featuredPackages" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                           <!-- Package cards will be injected here by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Premium Tour Packages -->
+                 <div id="premiumPackagesSection" class="py-20 bg-orange-50">
+                    <div class="container mx-auto px-6">
+                        <h2 class="text-4xl font-bold text-center mb-4 animate-on-scroll">Premium & Luxury Tours</h2>
+                        <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto animate-on-scroll" style="transition-delay: 150ms;">Indulge in unparalleled luxury with our exclusive tours, offering bespoke experiences and premium accommodations.</p>
+                        <div id="premiumPackages" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                           <!-- Premium Package cards will be injected here by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Feedback Section -->
+                <div class="py-20 bg-white">
+                    <div class="container mx-auto px-6">
+                        <h2 class="text-4xl font-bold text-center mb-4 animate-on-scroll">What Our Customers Say</h2>
+                        <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto animate-on-scroll" style="transition-delay: 150ms;">We are proud of our service. Read reviews from travelers who have explored India with us.</p>
+                        <div id="homepageFeedback" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                           <!-- Feedback cards will be injected here by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Homepage Feedback Form Section -->
+                <div id="homepageFeedbackFormSection" class="py-20 bg-gray-50">
+                    <div class="container mx-auto px-6 max-w-3xl">
+                        <h2 class="text-4xl font-bold text-center mb-4 animate-on-scroll">Share Your Experience</h2>
+                        <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto animate-on-scroll" style="transition-delay: 150ms;">Loved your trip with us? Leave a review and help other travelers discover the magic of India!</p>
+                        <div class="bg-white p-8 rounded-2xl shadow-lg animate-on-scroll" style="transition-delay: 300ms;">
+                             <form id="homepageFeedbackForm">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div>
+                                        <label for="homepageFeedbackName" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                                        <input type="text" id="homepageFeedbackName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Your Rating</label>
+                                        <div id="homepageFeedbackStars" class="star-rating flex text-3xl items-center">
+                                            <div class="star" data-value="1">★</div>
+                                            <div class="star" data-value="2">★</div>
+                                            <div class="star" data-value="3">★</div>
+                                            <div class="star" data-value="4">★</div>
+                                            <div class="star" data-value="5">★</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-6">
+                                    <label for="homepageFeedbackComment" class="block text-sm font-medium text-gray-700 mb-1">Comments</label>
+                                    <textarea id="homepageFeedbackComment" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500" required></textarea>
+                                </div>
+                                <div class="text-center">
+                                    <button type="submit" class="bg-orange-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors duration-300 shadow">Submit Review</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+
+            <footer class="bg-gray-800 text-white">
+                <div class="container mx-auto px-6 py-12">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <div>
+                            <h3 class="font-logo text-2xl text-orange-500">Incredible India Tours</h3>
+                            <p class="mt-4 text-gray-400">Discover the incredible diversity of India with our expertly crafted tour packages and personalized travel experiences.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-bold tracking-wide">Popular Destinations</h4>
+                            <ul class="mt-4 space-y-2 text-gray-400">
+                                <li><a href="#" class="hover:text-white">Rajasthan</a></li>
+                                <li><a href="#" class="hover:text-white">Kerala</a></li>
+                                <li><a href="#" class="hover:text-white">Goa</a></li>
+                                <li><a href="#" class="hover:text-white">Himalayas</a></li>
+                            </ul>
+                        </div>
+                         <div>
+                            <h4 class="font-bold tracking-wide">Quick Links</h4>
+                            <ul class="mt-4 space-y-2 text-gray-400">
+                                <li><a href="#" class="hover:text-white">About Us</a></li>
+                                <li><a href="#" class="hover:text-white">Contact Us</a></li>
+                                <li><button onclick="document.getElementById('homepageFeedbackFormSection').scrollIntoView({ behavior: 'smooth' })" class="hover:text-white text-left w-full">Leave Feedback</button></li>
+                                <li><a href="#" class="hover:text-white">Privacy Policy</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold tracking-wide">Contact Info</h4>
+                            <ul class="mt-4 space-y-2 text-gray-400">
+                                <li class="flex items-center">+91 8928028780</li>
+                                <li class="flex items-center">a.n.group.of.industry.@gmail.com</li>
+                                <li class="flex items-center">123 Tourism Street, Navi Mumbai, India 110001</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mt-8 pt-8 border-t border-gray-700 text-center text-gray-500">
+                        &copy; 2025 Incredible India Tours. All Rights Reserved. Crafted by AN GROUP OF INDUSTRY
+                    </div>
+                </div>
+            </footer>
+        </section>
+
+        <!-- Admin Dashboard Page -->
+        <section id="adminDashboardPage" class="min-h-screen bg-gray-100 hidden">
+             <header class="bg-white shadow-sm sticky top-0 z-10">
+                <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">Admin Dashboard</h1>
+                        <p class="font-logo text-lg text-orange-500">Incredible India Tours</p>
+                    </div>
+                    <button onclick="handleLogout('userLoginPage')" class="bg-gray-800 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-900 transition-colors">Logout</button>
+                </div>
+            </header>
+
+            <div class="container mx-auto p-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left Column: Tabs and Content -->
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md">
+                        <!-- Tab Navigation -->
+                        <div class="border-b border-gray-200 mb-4">
+                            <nav class="flex space-x-4" aria-label="Tabs">
+                                <button onclick="showAdminTab('bookings')" id="tab-bookings" class="admin-tab active-tab text-orange-600 border-orange-600 whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm">
+                                    Customer Bookings
+                                </button>
+                                <button onclick="showAdminTab('feedback')" id="tab-feedback" class="admin-tab text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap pb-3 px-1 border-b-2 font-medium text-sm">
+                                    Customer Feedback
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div id="adminTabContent">
+                            <!-- Bookings Content -->
+                            <div id="content-bookings" class="admin-tab-content">
+                                <div class="flex flex-wrap items-center justify-between mb-4 gap-4">
+                                    <h2 class="text-2xl font-bold text-gray-800">All Bookings</h2>
+                                    <button id="exportButton" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors duration-300 flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                        Export to Excel
+                                    </button>
+                                </div>
+                                <div id="bookingFilters" class="flex space-x-1 border-b border-gray-200 mb-4">
+                                    <button data-filter="All" class="filter-btn active-filter px-4 py-2 text-sm font-medium border-b-2 border-orange-500 text-orange-500">All</button>
+                                    <button data-filter="Confirmed" class="filter-btn text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-medium border-b-2 border-transparent">Confirmed</button>
+                                    <button data-filter="Pending" class="filter-btn text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-medium border-b-2 border-transparent">Pending</button>
+                                    <button data-filter="Cancelled" class="filter-btn text-gray-500 hover:text-gray-700 px-4 py-2 text-sm font-medium border-b-2 border-transparent">Cancelled</button>
+                                </div>
+                                <div id="bookingsList" class="space-y-3 h-[60vh] overflow-y-auto no-scrollbar pr-2"></div>
+                            </div>
+
+                            <!-- Feedback Content -->
+                            <div id="content-feedback" class="admin-tab-content hidden">
+                                <h2 class="text-2xl font-bold text-gray-800 mb-4">All Feedback</h2>
+                                <div id="feedbackList" class="space-y-4 h-[70vh] overflow-y-auto no-scrollbar pr-2"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Booking Details -->
+                    <div id="bookingDetailsContainer" class="bg-white p-6 rounded-xl shadow-md lg:sticky lg:top-24 h-fit">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4 border-b pb-3">Booking Details</h2>
+                        <div id="bookingDetails">
+                             <div class="text-center text-gray-500 py-16">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                                <p class="mt-4 font-medium">Select a booking</p>
+                                <p class="text-sm">Choose a booking from the list to view details.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modals -->
+        <div id="tourDetailsModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 hidden">
+            <div id="tourDetailsModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[90vh] flex flex-col transform transition-all opacity-0 scale-95"></div>
+        </div>
+        <div id="bookingModal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-[60] hidden">
+            <div id="bookingModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform transition-all opacity-0 scale-95"></div>
+        </div>
+        
+    </div>
+
+    <script>
+        // --- DATA ---
+        const allTours = [
+            // Popular Destinations - NEW ACCURATE IMAGES
+            { id: 101, category: 'popular', name: 'Wonders of Agra', duration: 3, price: 15000, route: 'Agra • Fatehpur Sikri', images: ['https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=1280', 'https://media.istockphoto.com/id/520840182/photo/red-fort-lal-qila-with-indian-flag-delhi-india.jpg?s=612x612&w=0&k=20&c=pOIkOX7dnJh2zwJhF9HrknY7kwYZtDgOd1n98wkHCKQ=', 'https://media.istockphoto.com/id/1045842190/photo/fatehpur-sikri-anup-talao-red-sandstone-architectural-structure-at-sunset-with-moody-sky.jpg?s=612x612&w=0&k=20&c=v1icHo-kT3h5G1NMBJPQjSNzrAzedTrZJFex1vKKcco=', 'https://cdn.britannica.com/09/189809-050-FAC505B0/Jama-Masjid-Delhi.jpg'], details: { overview: 'Discover the city of the Taj Mahal. This short trip covers the iconic monument of love, the formidable Agra Fort, and the abandoned city of Fatehpur Sikri.', highlights: ['Witness the Taj Mahal at sunrise.', 'Explore the massive Agra Fort.', 'Visit the UNESCO World Heritage site of Fatehpur Sikri.'], itinerary: 'A perfect weekend getaway to explore the Mughal architectural wonders in and around Agra.' } },
+            { id: 102, category: 'popular', name: 'Colors of Jaipur', duration: 4, price: 18000, route: 'Jaipur • Amer', images: ['https://media.istockphoto.com/id/1398087835/photo/pink-palace-hawa-mahal-jaipur-india-beautiful-sunset-view.jpg?s=612x612&w=0&k=20&c=S8X6bk4Mdp0xu624dFZCHfobotdwdIp7K1FEQJV6hkI=', 'https://images.unsplash.com/photo-1559991219-953a58c895e7?q=80&w=1280', 'https://images.unsplash.com/photo-1603261599948-52881b39a98b?q=80&w=1280', 'https://images.unsplash.com/photo-1594008741353-8392a1883a93?q=80&w=1280'], details: { overview: 'Explore the Pink City, Jaipur. This tour covers the majestic forts, palaces, and vibrant markets of the Rajasthani capital.', highlights: ['Ride an elephant up to Amer Fort.', 'Visit the stunning City Palace and Hawa Mahal.', 'Shop for local handicrafts in Johari Bazaar.'], itinerary: 'Immerse yourself in the royal heritage of Jaipur, experiencing its rich history and colorful culture.' } },
+            { id: 103, category: 'popular', name: 'Spiritual Varanasi', duration: 3, price: 14000, route: 'Varanasi • Sarnath', images: ['https://cdn.getyourguide.com/img/location/6023dbcb71489.jpeg/99.jpg','https://images.unsplash.com/photo-1529124233633-593a743a258a?q=80&w=1280','https://images.unsplash.com/photo-1587527902931-e3793e68923a?q=80&w=1280', 'https://images.unsplash.com/photo-1588610136913-23a9a8363475?q=80&w=1280'], details: { overview: 'Experience the spiritual heart of India in Varanasi. Witness ancient rituals on the ghats of the Ganges and find peace in its chaotic beauty.', highlights: ['Evening Ganga Aarti ceremony by boat.', 'Sunrise boat ride on the Ganges.', 'Day trip to Sarnath, where Buddha gave his first sermon.'], itinerary: 'A profound journey into the oldest living city in the world, exploring its spiritual significance and timeless traditions.' } },
+            { id: 104, category: 'popular', name: 'Goa Beach Escape', duration: 4, price: 16000, route: 'North & South Goa', images: ['https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z29hfGVufDB8fDB8fHww', 'https://images.unsplash.com/photo-1570202324901-523a14e9d7a2?q=80&w=1280', 'https://images.unsplash.com/photo-1509233725247-49e657c54213?q=80&w=1280', 'https://images.unsplash.com/photo-1614897453956-5526569d2dc2?q=80&w=1280'], details: { overview: 'Relax, rejuvenate, and party on the famous beaches of Goa. This trip offers the perfect mix of vibrant nightlife and serene relaxation.', highlights: ['Enjoy water sports on Baga Beach.', 'Relax on the pristine sands of Palolem Beach.', 'Explore the historic churches of Old Goa.'], itinerary: 'Discover the lively beaches of the north and the tranquil shores of the south in this perfect beach getaway.' } },
+            { id: 105, category: 'popular', name: 'Mumbai City of Dreams', duration: 3, price: 17000, route: 'South Mumbai • Bollywood', images: ['https://media.assettype.com/freepressjournal/2025-03-22/5d6381jz/ff4014ec9ff945f3cf577c696b1eb98d-1.jpg?width=1200', 'https://images.unsplash.com/photo-1529253355930-57e2f5280814?q=80&w=1280', 'https://images.unsplash.com/photo-1600078686889-8973b027b594?q=80&w=1280', 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?q=80&w=1280'], details: { overview: 'Experience the bustling metropolis of Mumbai. From colonial architecture to the glamour of Bollywood, this tour captures the spirit of the city.', highlights: ['Visit the Gateway of India and Elephanta Caves.', 'Take a tour of a Bollywood film studio.', 'Explore the vibrant street food scene.'], itinerary: 'A whirlwind tour of Mumbai\'s most famous landmarks and cultural hotspots.' } },
+            { id: 106, category: 'popular', name: 'Rishikesh Yoga Retreat', duration: 5, price: 20000, route: 'Rishikesh • Haridwar', images: ['https://campinginrishikesh.in/wp-content/uploads/2017/02/200-hours-hatha-yoga-teacher-trainin-india.jpg', 'https://images.unsplash.com/photo-1593532938363-2bfd986b6a66?q=80&w=1280', 'https://images.unsplash.com/photo-1608428236142-20a4d46a83a4?q=80&w=1280', 'https://images.unsplash.com/photo-1589334863339-3f04f2f09852?q=80&w=1280'], details: { overview: 'Find your inner peace in the Yoga Capital of the World. This retreat focuses on rejuvenation of mind, body, and soul amidst the serene Himalayan foothills.', highlights: ['Daily yoga and meditation sessions with experts.', 'Witness the Ganga Aarti at Haridwar.', 'Go white-water rafting on the Ganges.'], itinerary: 'A perfect blend of spiritual wellness and adventure in the holy towns of Rishikesh and Haridwar.' } },
+            { id: 107, category: 'popular', name: 'Amritsar Golden Temple', duration: 2, price: 12000, route: 'Amritsar • Wagah Border', images: ['https://t3.ftcdn.net/jpg/03/11/74/00/360_F_311740081_PL7ftGHnZL7JMBQpigswigY2xFwSRHJg.jpg', 'https://images.unsplash.com/photo-1625818272583-b1bf38699114?q=80&w=1280', 'https://images.unsplash.com/photo-1599321612845-165c713a0104?q=80&w=1280', 'https://images.unsplash.com/photo-1609879685731-7b99d54a72d4?q=80&w=1280'], details: { overview: 'Visit the stunning Golden Temple, the spiritual center for Sikhs. This tour also includes the patriotic flag-lowering ceremony at the Wagah Border.', highlights: ['Experience the serenity of the Golden Temple.', 'Witness the electrifying Wagah Border ceremony.', 'Savor delicious Punjabi cuisine.'], itinerary: 'A short but powerful trip to experience the spiritual and patriotic fervor of Punjab.' } },
+            { id: 108, category: 'popular', name: 'Ruins of Hampi', duration: 4, price: 19000, route: 'Hampi • Anegundi', images: ['https://www.indiaholidaymall.com/images/blog/Exploring-the-Enchanting-Ruins-of-Hampi.jpg', 'https://images.unsplash.com/photo-1628147395011-2a6c11cf3b12?q=80&w=1280', 'https://images.unsplash.com/photo-1597025818956-1a863f2531e2?q=80&w=1280', 'https://images.unsplash.com/photo-1601614339457-3103b4130638?q=80&w=1280'], details: { overview: 'Step back in time at the UNESCO World Heritage site of Hampi. Explore the captivating ruins of the Vijayanagara Empire set amidst a unique boulder-strewn landscape.', highlights: ['Explore the magnificent Virupaksha Temple.', 'Visit the iconic Stone Chariot at the Vittala Temple.', 'Enjoy a coracle ride on the Tungabhadra River.'], itinerary: 'Discover the architectural marvels and rich history of one of India\'s greatest ancient empires.' } },
+
+            // Featured Packages - NEW ACCURATE IMAGES
+            { id: 1, category: 'featured', name: 'Golden Triangle Classic', duration: 7, price: 25000, route: 'Delhi • Agra • Jaipur', images: ['https://images.unsplash.com/photo-1587474260584-136574528ed5?q=80&w=1280', 'https://images.unsplash.com/photo-1599661046223-e06588536344?q=80&w=1280', 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=1280', 'https://images.unsplash.com/photo-1505533321630-975218a5f66f?q=80&w=1280'], details: { overview: 'Experience India\'s most iconic destinations. This tour is a perfect introduction to the rich history, vibrant culture, and architectural marvels of India.', highlights: ['Marvel at the breathtaking beauty of the Taj Mahal at sunrise.', 'Explore the historic Red Fort and Humayun\'s Tomb in Delhi.', 'Discover the royal grandeur of Amer Fort and City Palace in Jaipur.'], itinerary: 'Your journey begins in the capital, Delhi, exploring both the old and new cities. Next, you travel to Agra to witness the eternal symbol of love, the Taj Mahal. The tour concludes in Jaipur.' } },
+            { id: 2, category: 'featured', name: 'Kerala\'s God\'s Own Country', duration: 10, price: 32000, route: 'Kochi • Munnar • Alleppey', images: ['https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?q=80&w=1280', 'https://images.unsplash.com/photo-1588267211914-1a7c4856a3f2?q=80&w=1280', 'https://images.unsplash.com/photo-1552083974-186346191183?q=80&w=1280', 'https://images.unsplash.com/photo-1623713524250-e21589a11a24?q=80&w=1280'], details: { overview: 'Discover the tropical paradise of Kerala. This tour takes you through serene backwaters, lush green hill stations, and pristine beaches. A perfect blend of relaxation, nature, and culture.', highlights: ['Cruise through the tranquil backwaters of Alleppey on a traditional houseboat.', 'Walk through the aromatic tea gardens of Munnar.', 'Relax on the golden sands of Kovalam beach.'], itinerary: 'Start in the historic port city of Kochi. Ascend to the cool hills of Munnar, carpeted with tea plantations. Experience the unique lifestyle of the backwaters in Alleppey.' } },
+            { id: 3, category: 'featured', name: 'Himalayan Adventure', duration: 14, price: 55000, route: 'Shimla • Manali • Leh', images: [ 'https://images.ctfassets.net/3ng3kfj0qs70/5hYWFF6GBiCWS6Isoi6Y6G/0bd8aa3006cc1b6645c7543e85b093b3/Ultimate_Winter_Tour.JPG?w=1000&q=70', 'https://images.unsplash.com/photo-1617347644917-507de62370c7?q=80&w=1280', 'https://images.unsplash.com/photo-1549402123-741c8828e57e?q=80&w=1280', 'https://images.unsplash.com/photo-1593532938363-2bfd986b6a66?q=80&w=1280' ], details: { overview: 'Embark on a thrilling mountain expedition through the mighty Himalayas. This tour is for the adventure seeker, offering trekking, river rafting, and breathtaking views of snow-capped peaks.', highlights: ['Drive through the world\'s highest motorable roads to reach Leh.', 'Be mesmerized by the stunning, color-changing Pangong Lake.', 'Indulge in adventure sports like paragliding in Manali.'], itinerary: 'From the lush green valleys of Manali, the journey ascends to the stark, beautiful landscapes of Leh, Ladakh. The adventure concludes in the spiritual and adrenaline-pumping town of Rishikesh.' } },
+            { id: 4, category: 'featured', name: 'Wildlife of Central India', duration: 9, price: 48000, route: 'Bandhavgarh • Kanha', images: ['https://www.tourmyindia.com/packages-tour-india/wildlife-tour-packages/assets/image/itinerary-img/ranthambore-safari-01.webp', 'https://images.unsplash.com/photo-1593083739233-14c43714c62c?q=80&w=1280', 'https://images.unsplash.com/photo-1605367139152-254f15f603a1?q=80&w=1280', 'https://images.unsplash.com/photo-1484406566174-9da000fda64a?q=80&w=1280'], details: { overview: 'Go on a safari adventure in the heart of India, home to the majestic Bengal tiger. Explore the dense forests that inspired "The Jungle Book".', highlights: ['Multiple jeep safaris in Bandhavgarh and Kanha National Parks.', 'High chances of spotting tigers, leopards, and other wildlife.', 'Stay in comfortable jungle lodges.'], itinerary: 'This tour is a wildlife enthusiast\'s dream, focusing on two of India\'s best national parks for tiger sightings.' } },
+            { id: 5, category: 'featured', name: 'Tea Gardens of Darjeeling', duration: 6, price: 28000, route: 'Darjeeling • Gangtok', images: ['https://tea101.teabox.com/wp-content/uploads/2017/01/Darjeeling_Banner-1.jpg', 'https://images.unsplash.com/photo-1544259341-9333a6a94a2b?q=80&w=1280', 'https://images.unsplash.com/photo-1596374009383-a78d3869a844?q=80&w=1280', 'https://images.unsplash.com/photo-1618172193622-ae2d025f4032?q=80&w=1280'], details: { overview: 'Experience the charm of the colonial-era hill stations of Darjeeling and Gangtok. Enjoy breathtaking views of the Kanchenjunga peak and ride the famous Toy Train.', highlights: ['Ride the UNESCO World Heritage Darjeeling Himalayan Railway.', 'Watch the sunrise over Kanchenjunga from Tiger Hill.', 'Explore the serene monasteries of Gangtok.'], itinerary: 'A refreshing journey through the lush tea plantations and scenic landscapes of the Eastern Himalayas.' } },
+            { id: 6, category: 'featured', name: 'Spiritual South', duration: 12, price: 42000, route: 'Chennai • Madurai • Rameshwaram', images: ['https://maduraiholidays.com/wp-content/uploads/2024/12/Rameshwaram-6.jpg', 'https://images.unsplash.com/photo-1626525287515-ad21319c3547?q=80&w=1280', 'https://images.unsplash.com/photo-1588610136913-23a9a8363475?q=80&w=1280', 'https://images.unsplash.com/photo-1616162224559-22a131c19b06?q=80&w=1280'], details: { overview: 'Embark on a divine journey through the ancient temples of South India. This tour covers some of the most significant and architecturally stunning temples in the country.', highlights: ['Explore the magnificent Meenakshi Temple in Madurai.', 'Visit the Ramanathaswamy Temple in Rameshwaram, a major pilgrimage site.', 'Discover the shore temples of Mahabalipuram.'], itinerary: 'A deeply spiritual and culturally rich tour showcasing the grandeur of Dravidian temple architecture.' } },
+            
+            // Premium Packages - NEW ACCURATE IMAGES
+            { id: 201, category: 'premium', name: 'Palaces of Rajasthan', duration: 10, price: 120000, route: 'Udaipur • Jodhpur • Jaipur', images: ['https://imagedelivery.net/y9EHf1toWJTBqJVsQzJU4g/www.indianholiday.com/2024/09/Udaipur-Tourism-1.png/w=9999', 'https://images.unsplash.com/photo-1575986767340-5d17976272c9?q=80&w=1280', 'https://images.unsplash.com/photo-1512438475333-a8a1e43d2974?q=80&w=1280', 'https://images.unsplash.com/photo-1624558365169-450036e4695e?q=80&w=1280'], details: { overview: 'Experience the ultimate royal treatment by staying in actual heritage palace hotels. This tour is a journey back in time to the opulent lifestyle of the Maharajas.', highlights: ['Stay at the Taj Lake Palace in Udaipur.', 'Dine at the Umaid Bhawan Palace in Jodhpur.', 'Private guided tours of all major forts and palaces.'], itinerary: 'Indulge in unmatched luxury as you travel through Rajasthan\'s most majestic cities, staying exclusively in former royal palaces converted into luxury hotels.' } },
+            { id: 202, category: 'premium', name: 'Andaman Yacht Expedition', duration: 8, price: 180000, route: 'Port Blair • Havelock • Neil Island', images: ['https://images.unsplash.com/photo-1567899378494-47b22a2ae96a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80', 'https://images.unsplash.com/photo-1609953835574-32534570e0e2?q=80&w=1280', 'https://images.unsplash.com/photo-1589309734938-a7343513a290?q=80&w=1280', 'https://images.unsplash.com/photo-1600225135114-87428b438313?q=80&w=1280'], details: { overview: 'Explore the pristine, untouched beauty of the Andaman Islands on a private luxury yacht. Discover secluded beaches, vibrant coral reefs, and lush tropical forests.', highlights: ['Private yacht with a full crew.', 'Scuba diving and snorkeling at the best spots.', 'Gourmet dining on board.'], itinerary: 'Sail through the turquoise waters of the Andaman Sea, hopping from the vibrant Havelock Island to the tranquil Neil Island, with personalized stops at your request.' } },
+            { id: 203, category: 'premium', name: 'Maharajas\' Express', duration: 7, price: 450000, route: 'Delhi to Mumbai (Luxury Train)', images: ['https://www.tourmyindia.com/luxury-train-tours/wp-content/uploads/2018/08/schedulebanner.jpg', 'https://images.unsplash.com/photo-1627937346513-546b3834e5a3?q=80&w=1280', 'https://images.unsplash.com/photo-1606560849315-a4b5b7b9b183?q=80&w=1280', 'https://images.unsplash.com/photo-1581258655651-87850536136d?q=80&w=1280'], details: { overview: 'Travel like royalty on one of the world\'s most luxurious trains. The Maharajas\' Express is a journey through India\'s heritage with unmatched opulence and service.', highlights: ['Travel in a private, luxurious cabin.', 'All-inclusive meals and beverages.', 'Exclusive off-board excursions with private guides.'], itinerary: 'Embark on a week-long journey covering iconic destinations like Agra, Ranthambore, Jaipur, and Udaipur, all while enjoying the comforts of a 5-star hotel on wheels.' } },
+            { id: 204, category: 'premium', name: 'Himalayan Kingdom of Bhutan', duration: 9, price: 250000, route: 'Paro • Thimphu • Punakha', images: ['https://www.andbeyond.com/wp-content/uploads/sites/5/Bhutan-Punakha-Dzong-Sunset-1326288165-Website-1920x1080-fill-gravityauto.jpg', 'https://images.unsplash.com/photo-1541882337-97538a7b57a3?q=80&w=1280', 'https://images.unsplash.com/photo-1579696238364-77888c3a7043?q=80&w=1280', 'https://images.unsplash.com/photo-1544259341-9333a6a94a2b?q=80&w=1280'], details: { overview: 'Discover the last great Himalayan kingdom, Bhutan. This exclusive tour focuses on the unique culture, stunning landscapes, and spiritual tranquility of this magical country.', highlights: ['Hike to the iconic Tiger\'s Nest Monastery in Paro.', 'Explore the capital city of Thimphu.', 'Visit the beautiful Punakha Dzong.'], itinerary: 'An all-inclusive luxury tour to the Land of the Thunder Dragon, offering a unique blend of culture, nature, and spirituality.' } }
+        ];
+
+        let bookings = [
+            { id: 1, customer: { name: 'John Doe', email: 'john.doe@example.com', phone: '9876543210' }, tour: { name: 'Palaces of Rajasthan', destination: 'Jaipur, Rajasthan', pricePerPerson: 120000 }, travelDate: '2025-09-15', guests: 2, specialRequests: 'Need a room with a good view.', totalAmount: 240000, status: 'Confirmed' },
+            { id: 2, customer: { name: 'Jane Smith', email: 'jane.smith@example.com', phone: '8765432109' }, tour: { name: 'Kerala\'s God\'s Own Country', destination: 'Alleppey, Kerala', pricePerPerson: 32000 }, travelDate: '2025-10-20', guests: 4, specialRequests: 'Requesting vegan meals.', totalAmount: 128000, status: 'Pending' }
+        ];
+
+        let feedbacks = [
+            { id: 1, name: 'Alice Johnson', rating: 5, comment: 'The Golden Triangle tour was absolutely fantastic! Our guide was knowledgeable and the hotels were top-notch. Seeing the Taj Mahal at sunrise was a dream come true. Highly recommended!' },
+            { id: 2, name: 'Bob Williams', rating: 4, comment: 'Kerala is truly God\'s Own Country. The houseboat experience was serene and beautiful. The food was a bit too spicy for my taste at times, but overall a great trip.' },
+            { id: 3, name: 'Charlie Brown', rating: 5, comment: 'Our Rajasthan Royal Heritage tour felt like living a dream. The palaces were magnificent, and the service was impeccable. Worth every penny!' }
+        ];
+
+        let currentBooking = null;
+        let selectedBookingId = null;
+        let currentRating = 0;
+
+        // --- PAGE NAVIGATION ---
+        const pages = ['userLoginPage', 'adminLoginPage', 'homePage', 'adminDashboardPage'];
+        function showPage(pageId) {
+            pages.forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        // --- AUTH & LOGOUT ---
+        function handleUserLogin() { showPage('homePage'); }
+        function handleAdminLogin() {
+            renderBookings();
+            renderFeedbacks();
+            showAdminTab('bookings');
+            showPage('adminDashboardPage');
+        }
+        function handleLogout(destinationPage) { showPage(destinationPage); }
+
+        // --- RENDER DYNAMIC CONTENT ---
+        // Generic function to create a tour card
+        function createTourCard(tour, index, isPremium = false) {
+            const theme = {
+                bg: isPremium ? 'bg-white' : 'bg-white',
+                priceColor: isPremium ? 'text-orange-600' : 'text-orange-600',
+                detailsButton: isPremium ? 'bg-orange-100 text-orange-600 hover:bg-orange-200' : 'bg-orange-100 text-orange-600 hover:bg-orange-200',
+                bookButton: isPremium ? 'bg-orange-500 text-white hover:bg-orange-600' : 'bg-orange-500 text-white hover:bg-orange-600'
+            };
+
+            return `
+                <div class="tour-card ${theme.bg} rounded-xl shadow-lg overflow-hidden flex flex-col animate-on-scroll" style="transition-delay: ${index * 100}ms;">
+                     <div class="relative">
+                        <img src="${tour.images[0]}" alt="${tour.name}" class="w-full h-56 object-cover">
+                        <div class="absolute top-3 right-3 bg-white text-gray-800 text-xs font-bold px-3 py-1 rounded-full shadow-md">${tour.duration} Days</div>
+                    </div>
+                    <div class="p-6 flex-grow flex flex-col">
+                        <h3 class="text-xl font-bold">${tour.name}</h3>
+                        <p class="text-sm text-gray-500 mt-1">${tour.route}</p>
+                        <div class="pt-4 border-t mt-auto">
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <span class="text-2xl font-bold ${theme.priceColor}">₹${tour.price.toLocaleString('en-IN')}</span>
+                                    <span class="text-gray-500 text-sm">/ person</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="showTourDetails(${tour.id})" class="w-full px-4 py-2 rounded-lg font-semibold transition-colors ${theme.detailsButton}">View Details</button>
+                                <button onclick="startBooking(${tour.id})" class="w-full px-4 py-2 rounded-lg font-semibold transition-colors shadow ${theme.bookButton}">Book Now</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        }
+
+
+        function renderDestinations() {
+            const container = document.getElementById('popularDestinations');
+            const popularTours = allTours.filter(t => t.category === 'popular');
+            container.innerHTML = popularTours.map((tour, index) => createTourCard(tour, index)).join('');
+        }
+
+        function renderPackages() {
+            const container = document.getElementById('featuredPackages');
+            const featuredTours = allTours.filter(t => t.category === 'featured');
+            container.innerHTML = featuredTours.map((pkg, index) => createTourCard(pkg, index)).join('');
+        }
+        
+        function renderPremiumPackages() {
+            const container = document.getElementById('premiumPackages');
+            const premiumTours = allTours.filter(t => t.category === 'premium');
+            container.innerHTML = premiumTours.map((pkg, index) => createTourCard(pkg, index, true)).join('');
+        }
+
+        function renderHomepageFeedback() {
+            const container = document.getElementById('homepageFeedback');
+            const renderStars = (rating) => [...Array(5)].map((_, i) => `<span class="star-filled">★</span>`).join('');
+            container.innerHTML = feedbacks.slice(0, 3).map((f, index) => `
+                <div class="bg-white p-6 rounded-xl shadow-lg animate-on-scroll" style="transition-delay: ${index * 100}ms;">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center font-bold text-xl mr-4">${f.name.charAt(0)}</div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">${f.name}</h4>
+                            <div class="feedback-stars flex text-lg">${renderStars(f.rating)}</div>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 text-sm italic">"${f.comment}"</p>
+                </div>
+            `).join('');
+        }
+
+        // --- TOUR DETAILS MODAL ---
+        function showTourDetails(tourId) {
+            const tour = allTours.find(p => p.id === tourId);
+            const modalContent = document.getElementById('tourDetailsModalContent');
+            modalContent.innerHTML = `
+                <div class="flex justify-between items-center p-4 border-b">
+                    <h2 class="text-2xl font-bold">${tour.name}</h2>
+                    <button onclick="closeTourDetailsModal()" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+                </div>
+                <div class="flex-grow overflow-y-auto no-scrollbar p-6">
+                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div>
+                            <img id="main-tour-image" src="${tour.images[0]}" class="w-full h-80 object-cover rounded-lg shadow-md mb-4">
+                            <div id="tour-image-thumbnails" class="grid grid-cols-4 gap-2">
+                                ${tour.images.map((img, i) => `<img src="${img}" onclick="updateMainImage('${img}', this)" class="w-full h-20 object-cover rounded-md cursor-pointer border-2 ${i===0 ? 'thumbnail-active' : 'border-transparent'} opacity-80 hover:opacity-100">`).join('')}
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-gray-700 mb-4">${tour.details.overview}</p>
+                            <h3 class="font-bold text-lg mb-2">Highlights</h3>
+                            <ul class="list-disc list-inside space-y-1 text-gray-600 mb-4">${tour.details.highlights.map(h => `<li>${h}</li>`).join('')}</ul>
+                            <h3 class="font-bold text-lg mb-2">Itinerary</h3>
+                            <p class="text-gray-700">${tour.details.itinerary}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 bg-gray-50 border-t flex justify-between items-center">
+                    <div>
+                        <span class="text-2xl font-bold text-orange-600">₹${tour.price.toLocaleString('en-IN')}</span>
+                        <span class="text-gray-500 text-sm">/ person</span>
+                    </div>
+                    <button onclick="startBookingFromDetails(${tour.id})" class="bg-orange-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-600 shadow-lg">Book This Tour</button>
+                </div>`;
+            
+            document.getElementById('tourDetailsModal').classList.remove('hidden');
+            setTimeout(() => modalContent.classList.remove('opacity-0', 'scale-95'), 10);
+        }
+
+        function closeTourDetailsModal() {
+            const modalContent = document.getElementById('tourDetailsModalContent');
+            modalContent.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => document.getElementById('tourDetailsModal').classList.add('hidden'), 300);
+        }
+
+        function updateMainImage(src, thumb) {
+            document.getElementById('main-tour-image').src = src;
+            document.querySelectorAll('#tour-image-thumbnails img').forEach(el => el.classList.remove('thumbnail-active'));
+            thumb.classList.add('thumbnail-active');
+        }
+
+        function startBookingFromDetails(tourId) {
+            closeTourDetailsModal();
+            setTimeout(() => startBooking(tourId), 300);
+        }
+
+        // --- HOMEPAGE FEEDBACK FORM ---
+        function setupHomepageFeedbackForm() {
+            const form = document.getElementById('homepageFeedbackForm');
+            const starsContainer = document.getElementById('homepageFeedbackStars');
+            const stars = starsContainer.querySelectorAll('.star');
+
+            // Function to update star visuals
+            const updateStars = (rating) => {
+                stars.forEach(s => {
+                    s.classList.toggle('selected', parseInt(s.dataset.value) <= rating);
+                });
+            };
+
+            stars.forEach(star => {
+                star.addEventListener('mouseover', () => updateStars(parseInt(star.dataset.value)));
+                star.addEventListener('mouseout', () => updateStars(currentRating));
+                star.addEventListener('click', () => {
+                    currentRating = parseInt(star.dataset.value);
+                    updateStars(currentRating);
+                });
+            });
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const name = document.getElementById('homepageFeedbackName').value;
+                const comment = document.getElementById('homepageFeedbackComment').value;
+
+                if (currentRating === 0) {
+                    alert("Please select a star rating.");
+                    return;
+                }
+
+                feedbacks.unshift({
+                    id: Date.now(),
+                    name,
+                    rating: currentRating,
+                    comment
+                });
+
+                renderFeedbacks(); // Update admin panel
+                renderHomepageFeedback(); // Update homepage testimonials
+                
+                // Clear form
+                form.reset();
+                currentRating = 0;
+                updateStars(0);
+                
+                alert("Thank you! Your review has been submitted.");
+            });
+        }
+
+
+        // --- BOOKING MODAL ---
+        function startBooking(tourId) {
+            const tour = allTours.find(p => p.id === tourId);
+            currentBooking = { tour: { name: tour.name, destination: tour.route, pricePerPerson: tour.price }, customer: {}, guests: 1 };
+            showBookingStep(1);
+            document.getElementById('bookingModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('bookingModalContent').classList.remove('opacity-0', 'scale-95'), 10);
+        }
+        function closeBookingModal() {
+            const modalContent = document.getElementById('bookingModalContent');
+            modalContent.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                document.getElementById('bookingModal').classList.add('hidden');
+                currentBooking = null;
+            }, 300);
+        }
+        function showBookingStep(step) {
+            const modalContent = document.getElementById('bookingModalContent');
+            let content = '';
+            const progress = s => `<div class="flex items-center justify-between mb-6 px-8">${[1,2,3].map(i=>`<div class="flex items-center ${i>1?'flex-1':''}"><span class="w-8 h-8 rounded-full flex items-center justify-center ${s>=i?'bg-orange-500 text-white':'bg-gray-200'} font-bold">${i}</span><span class="ml-2 ${s>=i?'text-gray-800':'text-gray-400'}">${['Details','Review','Payment'][i-1]}</span>${i<3?`<div class="flex-1 h-0.5 mx-4 ${s>i?'bg-orange-500':'bg-gray-200'}"></div>`:''}</div>`).join('')}</div>`;
+            if (step === 1) {
+                content = `<div class="p-6 pb-0"><div class="flex justify-between items-start"><h2 class="text-2xl font-bold">Book Tour</h2><button onclick="closeBookingModal()" class="text-3xl">&times;</button></div><p class="text-gray-500 mb-6">${currentBooking.tour.name}</p>${progress(1)}</div><div class="px-8 pb-6 bg-gray-50 max-h-[60vh] overflow-y-auto no-scrollbar"><form id="bookingDetailsForm"><h3 class="text-lg font-semibold mb-4 pt-4">Personal Details</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="text-sm">Full Name</label><input type="text" name="name" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="text-sm">Email</label><input type="email" name="email" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="text-sm">Phone</label><input type="tel" name="phone" class="w-full mt-1 p-2 border rounded-md" required></div><div><label class="text-sm">Travel Date</label><input type="date" name="travelDate" class="w-full mt-1 p-2 border rounded-md" required min="${new Date().toISOString().split('T')[0]}"></div><div><label class="text-sm">Guests</label><input type="number" name="guests" value="1" min="1" max="10" class="w-full mt-1 p-2 border rounded-md" required></div></div><div class="mt-4"><label class="text-sm">Special Requests</label><textarea name="specialRequests" rows="3" class="w-full mt-1 p-2 border rounded-md"></textarea></div></form></div><div class="p-4 bg-white border-t flex justify-end gap-3"><button onclick="closeBookingModal()" class="px-6 py-2 bg-gray-200 rounded-lg">Cancel</button><button onclick="processBookingStep1()" class="px-6 py-2 bg-orange-500 text-white rounded-lg">Next</button></div>`;
+            } else if (step === 2) {
+                currentBooking.totalAmount = currentBooking.tour.pricePerPerson * currentBooking.guests;
+                content = `<div class="p-6 pb-0"><h2 class="text-2xl font-bold mb-6">Review Booking</h2>${progress(2)}</div><div class="px-8 pb-6 bg-gray-50 max-h-[60vh] overflow-y-auto no-scrollbar"><div class="space-y-4 text-sm"><div class="pt-4"><h4 class="font-semibold text-base">Tour Details</h4><p><strong>Package:</strong> ${currentBooking.tour.name}</p><p><strong>Price/person:</strong> ₹${currentBooking.tour.pricePerPerson.toLocaleString('en-IN')}</p></div><div class="border-t pt-4"><h4 class="font-semibold text-base">Customer Details</h4><p><strong>Name:</strong> ${currentBooking.customer.name}</p><p><strong>Email:</strong> ${currentBooking.customer.email}</p><p><strong>Date:</strong> ${currentBooking.travelDate}</p><p><strong>Guests:</strong> ${currentBooking.guests}</p></div><div class="border-t pt-4 text-right"><p class="text-2xl font-bold">Total: <span class="text-orange-600">₹${currentBooking.totalAmount.toLocaleString('en-IN')}</span></p></div></div></div><div class="p-4 bg-white border-t flex justify-between"><button onclick="showBookingStep(1)" class="px-6 py-2 bg-gray-200 rounded-lg">Previous</button><button onclick="showBookingStep(3)" class="px-6 py-2 bg-orange-500 text-white rounded-lg">Next</button></div>`;
+            } else if (step === 3) {
+                content = `<div class="p-6 pb-0"><h2 class="text-2xl font-bold mb-6">Payment</h2>${progress(3)}</div><div class="px-8 pb-6 bg-gray-50"><p class="text-center text-xl font-bold mb-4">Total: <span class="text-orange-600">₹${currentBooking.totalAmount.toLocaleString('en-IN')}</span></p><div class="p-4 border bg-green-50 rounded-lg text-center"><h4 class="font-semibold text-green-800">Demo Payment</h4><p class="text-sm text-green-700 mt-1">Click below to simulate payment.</p><button id="processPaymentBtn" onclick="processPayment()" class="mt-4 w-full bg-green-600 text-white py-3 rounded-lg font-semibold">Process Payment</button></div></div><div class="p-4 bg-white border-t flex justify-start"><button onclick="showBookingStep(2)" class="px-6 py-2 bg-gray-200 rounded-lg">Previous</button></div>`;
+            } else if (step === 4) {
+                content = `<div class="p-8 text-center"><div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div><h2 class="text-2xl font-bold mb-2">Booking Confirmed!</h2><p class="text-gray-600 mb-6">Your tour is booked. You'll receive a confirmation email.</p><div class="text-left bg-gray-50 p-4 rounded-lg border text-sm"><h4 class="font-semibold mb-2">Summary</h4><p><strong>Destination:</strong> ${currentBooking.tour.destination}</p><p><strong>Date:</strong> ${currentBooking.travelDate}</p><p><strong>Total:</strong> ₹${currentBooking.totalAmount.toLocaleString('en-IN')}</p></div><button onclick="closeBookingModal()" class="mt-6 w-full bg-orange-500 text-white py-3 rounded-lg font-semibold">Close</button></div>`;
+            }
+            modalContent.innerHTML = content;
+        }
+        function processBookingStep1() {
+            const form = document.getElementById('bookingDetailsForm');
+            if (form.checkValidity()) {
+                const fd = new FormData(form);
+                currentBooking.customer = { name: fd.get('name'), email: fd.get('email'), phone: fd.get('phone') };
+                currentBooking.travelDate = fd.get('travelDate');
+                currentBooking.guests = parseInt(fd.get('guests'));
+                currentBooking.specialRequests = fd.get('specialRequests');
+                showBookingStep(2);
+            } else { form.reportValidity(); }
+        }
+        function processPayment() {
+            const btn = document.getElementById('processPaymentBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>`;
+            setTimeout(() => {
+                bookings.unshift({ id: Date.now(), ...currentBooking, status: 'Pending' });
+                renderBookings(); // Re-render bookings list in admin panel
+                showBookingStep(4);
+            }, 2000);
+        }
+
+        // --- ADMIN DASHBOARD ---
+        function showAdminTab(tabName) {
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.admin-tab').forEach(el => {
+                el.classList.remove('active-tab', 'text-orange-600', 'border-orange-600');
+                el.classList.add('text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            });
+            document.getElementById(`tab-${tabName}`).classList.add('active-tab', 'text-orange-600', 'border-orange-600');
+            
+            document.getElementById('bookingDetailsContainer').style.display = (tabName === 'bookings') ? 'block' : 'none';
+        }
+
+        function renderBookings(filter = 'All') {
+            const list = document.getElementById('bookingsList');
+            const filtered = bookings.filter(b => filter === 'All' || b.status === filter);
+            list.innerHTML = filtered.length ? filtered.map(b => `<div id="booking-item-${b.id}" onclick="showBookingDetails(${b.id})" class="p-4 border rounded-lg cursor-pointer hover:bg-gray-50 ${selectedBookingId===b.id ? 'bg-orange-50 border-orange-300' : 'border-gray-200'}"><div class="flex justify-between items-start"><p class="font-bold">${b.customer.name}</p><span class="status-badge status-${b.status.toLowerCase()} text-xs font-semibold px-2.5 py-1 rounded-full">${b.status}</span></div><p class="text-sm text-gray-500">${b.tour.name}</p></div>`).join('') : `<div class="text-center text-gray-500 py-10">No bookings.</div>`;
+            document.querySelectorAll('.status-badge').forEach(b => {
+                if (b.classList.contains('status-confirmed')) b.classList.add('bg-green-100', 'text-green-800');
+                else if (b.classList.contains('status-pending')) b.classList.add('bg-yellow-100', 'text-yellow-800');
+                else if (b.classList.contains('status-cancelled')) b.classList.add('bg-red-100', 'text-red-800');
+            });
+        }
+        
+        function renderFeedbacks() {
+            const list = document.getElementById('feedbackList');
+            const renderStars = (rating) => [...Array(5)].map((_, i) => `<span class="text-xl ${i < rating ? 'text-yellow-400' : 'text-gray-300'}">★</span>`).join('');
+            list.innerHTML = feedbacks.length ? feedbacks.map(f => `<div class="p-4 border border-gray-200 rounded-lg bg-white"><div class="flex justify-between items-center mb-2"><h4 class="font-bold text-gray-800">${f.name}</h4><div class="flex">${renderStars(f.rating)}</div></div><p class="text-gray-600 text-sm">${f.comment}</p></div>`).join('') : `<div class="text-center text-gray-500 py-10">No feedback yet.</div>`;
+        }
+        
+        function showBookingDetails(id) {
+            selectedBookingId = id;
+            const booking = bookings.find(b => b.id === id);
+            const container = document.getElementById('bookingDetails');
+            container.innerHTML = `<div class="space-y-4"><h4 class="font-semibold text-lg">Customer Info</h4><div class="text-sm"><p><strong>Name:</strong> ${booking.customer.name}</p><p><strong>Email:</strong> ${booking.customer.email}</p><p><strong>Phone:</strong> ${booking.customer.phone}</p></div></div><div class="border-t pt-4"><h4 class="font-semibold text-lg">Tour Info</h4><div class="text-sm"><p><strong>Package:</strong> ${booking.tour.name}</p><p><strong>Date:</strong> ${booking.travelDate}</p><p><strong>Total:</strong> ₹${booking.totalAmount.toLocaleString('en-IN')}</p></div></div><div class="border-t pt-4"><h4 class="font-semibold text-lg mb-3">Update Status</h4><div class="flex flex-col space-y-2"><button onclick="updateBookingStatus(${id},'Confirmed')" class="py-2 px-4 rounded-lg bg-green-600 text-white">Confirm</button><button onclick="updateBookingStatus(${id},'Pending')" class="py-2 px-4 rounded-lg bg-yellow-500 text-white">Pending</button><button onclick="updateBookingStatus(${id},'Cancelled')" class="py-2 px-4 rounded-lg bg-red-600 text-white">Cancel</button></div></div></div>`;
+            renderBookings(document.querySelector('#bookingFilters .active-filter').dataset.filter);
+        }
+        
+        function updateBookingStatus(id, status) {
+            const index = bookings.findIndex(b => b.id === id);
+            if (index > -1) {
+                bookings[index].status = status;
+                renderBookings(document.querySelector('#bookingFilters .active-filter').dataset.filter);
+                showBookingDetails(id);
+            }
+        }
+        
+        // --- EVENT LISTENERS & INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderDestinations();
+            renderPackages();
+            renderPremiumPackages();
+            renderHomepageFeedback();
+            setupHomepageFeedbackForm();
+            
+            document.querySelectorAll('#bookingFilters .filter-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('#bookingFilters .filter-btn').forEach(btn => {
+                        btn.classList.remove('active-filter', 'border-orange-500', 'text-orange-500');
+                        btn.classList.add('text-gray-500', 'border-transparent');
+                    });
+                    button.classList.add('active-filter', 'border-orange-500', 'text-orange-500');
+                    renderBookings(button.dataset.filter);
+                });
+            });
+            
+            document.getElementById('exportButton').addEventListener('click', () => {
+                const ws = XLSX.utils.json_to_sheet(bookings.map(b=>({'ID':b.id,'Customer':b.customer.name,'Email':b.customer.email,'Tour':b.tour.name,'Date':b.travelDate,'Guests':b.guests,'Amount':b.totalAmount,'Status':b.status})));
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Bookings");
+                XLSX.writeFile(wb, "Bookings.xlsx");
+            });
+
+            ['bookingModal', 'tourDetailsModal'].forEach(id => {
+                 document.getElementById(id).addEventListener('click', (e) => {
+                     if (e.target.id === id) {
+                         if (id === 'bookingModal') closeBookingModal();
+                         else if (id === 'tourDetailsModal') closeTourDetailsModal();
+                     }
+                 });
+            });
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('in-view');
+                    }
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+        });
+    </script>
+</body>
+</html>
+
